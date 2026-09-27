@@ -22,6 +22,11 @@ set(CORE_SOURCES
     src/scripted_client.cpp
     src/replay_client.cpp
     src/harness.cpp
+    src/conversation.cpp
+    src/sentinel_scanner.cpp
+    include/core/message.h
+    include/core/conversation.h
+    include/core/sentinel_scanner.h
 )
 
 # 2. Build the main program.
