@@ -1,48 +1,129 @@
-// include/core/conversation.h
-#pragma once
+// src/conversation.cpp
+#include "core/conversation.h"
+#include <stdexcept>
+#include <utility>
 
-#include "core/message.h"
-#include <cstddef>
+Conversation::Conversation()
+    : data_(nullptr), size_(0), capacity_(0) {}
 
-class Conversation
+Conversation::~Conversation()
 {
-public:
-  // Empty conversation: size() == 0, no allocation yet.
-  Conversation();
+  delete[] data_;
+  data_ = nullptr;
+  size_ = 0;
+  capacity_ = 0;
+}
 
-  // Releases all owned Message storage. No effect if already empty
-  // (e.g. moved-from).
-  ~Conversation();
+Conversation::Conversation(const Conversation &other)
+    : data_(nullptr), size_(other.size_), capacity_(other.capacity_)
+{
+  if (capacity_ > 0)
+  {
+    data_ = new Message[capacity_];
+    for (std::size_t i = 0; i < size_; ++i)
+    {
+      data_[i] = other.data_[i];
+    }
+  }
+}
 
-  // Deep copy: allocates its own buffer and copies every Message.
-  // this->begin() must differ from other.begin() afterward.
-  Conversation(const Conversation &other);
-  Conversation &operator=(const Conversation &other);
+Conversation &Conversation::operator=(const Conversation &other)
+{
+  if (this == &other)
+  {
+    return *this;
+  }
+  Message *new_data = nullptr;
+  if (other.capacity_ > 0)
+  {
+    new_data = new Message[other.capacity_];
+    for (std::size_t i = 0; i < other.size_; ++i)
+    {
+      new_data[i] = other.data_[i];
+    }
+  }
+  delete[] data_;
+  data_ = new_data;
+  size_ = other.size_;
+  capacity_ = other.capacity_;
+  return *this;
+}
 
-  // Steals other's buffer — no per-element copying. Afterward, other
-  // must be left valid and empty (safe to destroy or reassign).
-  Conversation(Conversation &&other) noexcept;
-  Conversation &operator=(Conversation &&other) noexcept;
+Conversation::Conversation(Conversation &&other) noexcept
+    : data_(other.data_), size_(other.size_), capacity_(other.capacity_)
+{
+  other.data_ = nullptr;
+  other.size_ = 0;
+  other.capacity_ = 0;
+}
 
-  // Appends m, growing the backing array if needed. Amortized O(1).
-  void append(Message m);
+Conversation &Conversation::operator=(Conversation &&other) noexcept
+{
+  if (this == &other)
+  {
+    return *this;
+  }
+  delete[] data_;
+  data_ = other.data_;
+  size_ = other.size_;
+  capacity_ = other.capacity_;
+  other.data_ = nullptr;
+  other.size_ = 0;
+  other.capacity_ = 0;
+  return *this;
+}
 
-  // Number of messages currently stored.
-  std::size_t size() const noexcept;
+void Conversation::append(Message m)
+{
+  if (size_ == capacity_)
+  {
+    std::size_t new_cap = (capacity_ == 0) ? 1 : capacity_ * 2;
+    Message *new_data = new Message[new_cap];
+    for (std::size_t i = 0; i < size_; ++i)
+    {
+      new_data[i] = std::move(data_[i]);
+    }
+    delete[] data_;
+    data_ = new_data;
+    capacity_ = new_cap;
+  }
+  data_[size_++] = std::move(m);
+}
 
-  // Capacity of the backing array.
-  std::size_t capacity() const noexcept;
+std::size_t Conversation::size() const noexcept
+{
+  return size_;
+}
 
-  // Bounds-checked access. Throws std::out_of_range on i >= size().
-  const Message &at(std::size_t i) const;
-  Message &at(std::size_t i);
+std::size_t Conversation::capacity() const noexcept
+{
+  return capacity_;
+}
 
-  // Range-for iteration, oldest message first. begin() == end() when size() == 0.
-  const Message *begin() const noexcept;
-  const Message *end() const noexcept;
+const Message &Conversation::at(std::size_t i) const
+{
+  if (i >= size_)
+  {
+    throw std::out_of_range("Conversation::at: index out of bounds");
+  }
+  return data_[i];
+}
 
-private:
-  Message *data_ = nullptr;
-  std::size_t size_ = 0;
-  std::size_t capacity_ = 0;
-};
+Message &Conversation::at(std::size_t i)
+{
+  if (i >= size_)
+  {
+    throw std::out_of_range("Conversation::at: index out of bounds");
+  }
+  return data_[i];
+}
+
+const Message *Conversation::begin() const noexcept
+{
+  return data_;
+}
+
+const Message *Conversation::end() const noexcept
+{
+  return data_ + size_;
+}
