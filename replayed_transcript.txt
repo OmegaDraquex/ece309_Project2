@@ -1,0 +1,14 @@
+role: system
+Be ultra concise.
+---
+role: user
+Howdy!
+---
+role: assistant
+Greetings! What can I do for you?
+---
+role: user
+See you later!
+---
+role: assistant
+Goodbye.<|end_conversation|>

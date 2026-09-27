@@ -7,26 +7,32 @@ project(MiniHarness VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Enable strict warnings and AddressSanitizer.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -fsanitize=address,undefined -g")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined")
+# Enable strict warnings.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -g")
+
+if(WIN32)
+    option(ENABLE_ASAN "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+else()
+    option(ENABLE_ASAN "Enable AddressSanitizer and UndefinedBehaviorSanitizer" ON)
+endif()
+
+if(ENABLE_ASAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined")
+endif()
 
 include_directories(include)
 
 # 1. Define the core files (everything EXCEPT main.cpp).
 set(CORE_SOURCES
-    src/conversation.cpp
-    src/sentinel_scanner.cpp
-    src/model_client.cpp
-    src/scripted_client.cpp
-    src/replay_client.cpp
-    src/harness.cpp
-    src/conversation.cpp
-    src/sentinel_scanner.cpp
-    include/core/message.h
-    include/core/conversation.h
-    include/core/sentinel_scanner.h
+  src/conversation.cpp
+  src/sentinel_scanner.cpp
+  src/model_client.cpp
+  src/scripted_client.cpp
+  src/replay_client.cpp
+  src/harness.cpp
 )
 
 # 2. Build the main program.

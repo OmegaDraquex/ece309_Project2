@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CMake: Configure",
+      "type": "shell",
+      "command": "cmake -S . -B build",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "CMake: Build All",
+      "type": "shell",
+      "command": "cmake --build build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$gcc",
+      "dependsOn": [
+        "CMake: Configure"
+      ]
+    },
+    {
+      "label": "Run Test Suite (test_p2)",
+      "type": "shell",
+      "command": "${workspaceFolder}/build/test_p2",
+      "windows": {
+        "command": "${workspaceFolder}\\build\\test_p2.exe"
+      },
+      "group": "test",
+      "problemMatcher": [],
+      "dependsOn": [
+        "CMake: Build All"
+      ]
+    },
+    {
+      "label": "Run MiniHarness",
+      "type": "shell",
+      "command": "${workspaceFolder}/build/miniharness --script scripts/greeting.script",
+      "windows": {
+        "command": "${workspaceFolder}\\build\\miniharness.exe --script scripts\\greeting.script"
+      },
+      "group": "none",
+      "problemMatcher": [],
+      "dependsOn": [
+        "CMake: Build All"
+      ]
+    }
+  ]
+}
